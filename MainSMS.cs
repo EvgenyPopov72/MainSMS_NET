@@ -3,6 +3,7 @@ using System.IO;
 using System.Net;
 using System.Security.Cryptography;
 using System.Text;
+using System.Xml;
 
 namespace MainSMS_NET
 
@@ -211,19 +212,63 @@ namespace MainSMS_NET
     /// <returns></returns>
     public SendersInfo GetSenders()
     {
-        SendersInfo aaa = null;
-/*
-        string aaaa = this.fetch(this.api_url + "sender/list",
-                                 "project=" + this.project + "&sign=" +
-                                 Mainsms.GetHash((HashAlgorithm) new MD5CryptoServiceProvider(),
-                                                 Mainsms.GetHash((HashAlgorithm) new SHA1Managed(),
-                                                                 this.project + ";" + this.api_key)));
-*/
         return new SendersInfo(this.fetch(this.api_url + "sender/list",
                                           "project=" + this.project + "&sign=" +
                                           Mainsms.GetHash((HashAlgorithm) new MD5CryptoServiceProvider(),
                                                           Mainsms.GetHash((HashAlgorithm) new SHA1Managed(),
                                                                           this.project + ";" + this.api_key))));
     }
+
+
+    /// <summary>
+    /// Уставновить или получить отправителя по умолчанию для проекта
+    /// </summary>
+    public string SenderDefault
+    {
+        get
+        {
+            return new ResponceSenderDefault(fetch(api_url + "sender/default",
+                                                   "project=" + project + "&format=" +
+                                                   response_type + "&sign=" +
+                                                   GetHash(new MD5CryptoServiceProvider(),
+                                                           GetHash(
+                                                               new SHA1Managed(),
+                                                               project + ";" + api_key))))
+                .SenderDefault;
+        }
+        set
+        // В описании API http://mainsms.ru/home/sender_api#set_sender_api ошибка в примере. Вместо параметра "sender" должно быть "name"
+        {
+            fetch(api_url + "sender/set",
+                  "project=" + project + "&name=" + value + "&sign=" +
+                  GetHash(new MD5CryptoServiceProvider(),
+                          GetHash(new SHA1Managed(),
+                                  project + ";"+ value +";" + api_key)));
+        }
+    }
+
+      //Todo Добавить возвращаемый тип методам
+    /// <summary>
+    /// Добавление имени отправителя. Имя отправителя будет создано и досупно только после проверки модератором.
+    /// </summary>
+    /// <param name="Sender"></param>
+    public void CreateSender(string Sender)
+    {
+        fetch(api_url + "sender/create",
+                "project=" + project + "&name=" + Sender + "&sign=" +
+                GetHash(new MD5CryptoServiceProvider(),
+                        GetHash(new SHA1Managed(),
+                                project + ";" + Sender + ";" + api_key)));
+    }
+
+    public void RemoveSender(string Sender)
+    {
+        fetch(api_url + "sender/remove",
+                "project=" + project + "&name=" + Sender + "&sign=" +
+                GetHash(new MD5CryptoServiceProvider(),
+                        GetHash(new SHA1Managed(),
+                                project + ";" + Sender + ";" + api_key)));
+    }
+
   }
 }
